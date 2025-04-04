@@ -1,0 +1,14 @@
+[
+    {
+        "title": "كتاب البرمجة",
+        "path": "كتاب_البرمجة.pdf"
+    },
+    {
+        "title": "دليل HTML",
+        "path": "دليل_HTML.pdf"
+    },
+    {
+        "title": "أساسيات JavaScript",
+        "path": "أساسيات_JavaScript.pdf"
+    }
+]
