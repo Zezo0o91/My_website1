@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>يعسوب الدين</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        :root {
+            --glass-color: rgba(0, 255, 150, 0.15);
+            --glass-border: 1px solid rgba(0, 255, 150, 0.2);
+            --glass-shadow: 0 8px 32px rgba(0, 255, 150, 0.1);
+            --main-green: #00ff96;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Cairo', sans-serif;
+            background: #0a1a1f;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            background: var(--glass-color);
+            backdrop-filter: blur(15px);
+            padding: 1.5rem 3rem;
+            border-radius: 50px;
+            border: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 0 auto;
+        }
+
+        .container {
+            display: flex;
+            gap: 2rem;
+            width: 90%;
+            max-width: 1400px;
+            margin: 2rem auto;
+            flex-grow: 1;
+        }
+
+        .sidebar {
+            background: var(--glass-color);
+            backdrop-filter: blur(15px);
+            padding: 1.5rem;
+            border-radius: 20px;
+            border: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            width: 300px;
+        }
+
+        .controls-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .controls-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            color: var(--main-green);
+        }
+
+        .sidebar select, .sidebar input {
+            width: 100%;
+            padding: 0.8rem;
+            border: var(--glass-border);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar select:focus, .sidebar input:focus {
+            border-color: var(--main-green);
+            box-shadow: 0 0 10px rgba(0, 255, 150, 0.3);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            border: var(--glass-border);
+            border-radius: 10px;
+            background: rgba(0, 255, 150, 0.3);
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn:hover {
+            background: rgba(0, 255, 150, 0.5);
+        }
+
+        .content {
+            flex: 1;
+            background: var(--glass-color);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            border: var(--glass-border);
+            border-radius: 50%;
+            background: rgba(0, 255, 150, 0.3);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .zoom-btn:hover {
+            background: rgba(0, 255, 150, 0.5);
+        }
+
+        canvas {
+            border-radius: 15px;
+            max-width: 100%;
+            transition: transform 0.3s ease;
+            cursor: grab;
+        }
+
+        canvas:active {
+            cursor: grabbing;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background: var(--glass-color);
+            border-top: var(--glass-border);
+            margin-top: auto;
+            backdrop-filter: blur(15px);
+        }
+
+        .credits {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .credits strong {
+            color: var(--main-green);
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: auto;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+                padding: 1rem 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📚 يعسوب الدين</h1>
+    </header>
+    
+    <div class="container">
+        <div class="sidebar">
+            <div class="controls-group">
+                <label>اختر كتابًا:</label>
+                <select id="bookSelect">
+                    <option value="books/كتاب_البرمجة.pdf">كتاب البرمجة</option>
+                    <option value="books/دليل_HTML.pdf">دليل HTML</option>
+                    <option value="books/أساسيات_JavaScript.pdf">أساسيات JavaScript</option>
+                </select>
+            </div>
+            
+            <div class="controls-group">
+                <label>أدخل رقم الصفحة:</label>
+                <input type="number" id="pageNumber" placeholder="رقم الصفحة" onkeypress="handleEnter(event)">
+                <button class="btn" onclick="loadPage()">عرض الصفحة</button>
+            </div>
+            
+            <div class="controls-group">
+                <label>البحث عن نص:</label>
+                <input type="text" id="searchQuery" placeholder="أدخل نص البحث" onkeypress="handleEnter(event)">
+                <button class="btn" onclick="searchText()">بحث</button>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomOut()">-</button>
+                <button class="zoom-btn" onclick="zoomIn()">+</button>
+            </div>
+            <canvas id="pdfCanvas"></canvas>
+        </div>
+    </div>
+
+    <footer>
+        <div class="credits">
+            <strong>المصمم زياد حميد الأنباري</strong><br>
+            <hr style="width: 50%; margin: 1rem auto; opacity: 0.2;">
+            أهدي ثواب هذا العمل إلى سيدتي ومولاتي فاطمة الزهراء عليها أفضل الصلاة والسلام<br>
+            والمؤمنين والمؤمنات وشهداء القوات الأمنية والحشد الشعبي<br>
+            وبالخصوص والدتي وأخي الشهيد بالصلاة على محمد وآل محمد الطيبين الطاهرين
+        </div>
+    </footer>
+
+    <script>
+        let pdfDoc = null;
+        let currentPage = 1;
+        let currentScale = 1.5;
+        let isDragging = false;
+        let startX, startY, scrollLeft, scrollTop;
+        const canvas = document.getElementById('pdfCanvas');
+        const ctx = canvas.getContext('2d');
+        const contentDiv = document.querySelector('.content');
+
+        // تهيئة خاصية السحب
+        contentDiv.addEventListener('mousedown', (e) => {
+            if (currentScale <= 1.5) return;
+            isDragging = true;
+            startX = e.pageX - contentDiv.offsetLeft;
+            startY = e.pageY - contentDiv.offsetTop;
+            scrollLeft = contentDiv.scrollLeft;
+            scrollTop = contentDiv.scrollTop;
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const x = e.pageX - contentDiv.offsetLeft;
+            const y = e.pageY - contentDiv.offsetTop;
+            const walkX = (x - startX) * 2;
+            const walkY = (y - startY) * 2;
+            contentDiv.scrollLeft = scrollLeft - walkX;
+            contentDiv.scrollTop = scrollTop - walkY;
+        });
+
+        async function loadPage() {
+            try {
+                const bookUrl = document.getElementById('bookSelect').value;
+                let pageNum = parseInt(document.getElementById('pageNumber').value) || 1;
+
+                if (!pdfDoc || pdfDoc.url !== bookUrl) {
+                    pdfDoc = await pdfjsLib.getDocument(bookUrl).promise;
+                    pdfDoc.url = bookUrl;
+                }
+
+                currentPage = Math.min(Math.max(pageNum, 1), pdfDoc.numPages);
+                const page = await pdfDoc.getPage(currentPage);
+                const viewport = page.getViewport({ scale: currentScale });
+
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport
+                };
+
+                await page.render(renderContext).promise;
+                document.getElementById('pageNumber').value = currentPage;
+            } catch (error) {
+                alert('حدث خطأ في تحميل الصفحة: ' + error.message);
+            }
+        }
+
+        function zoomIn() {
+            currentScale = Math.min(currentScale + 0.2, 3);
+            loadPage();
+        }
+
+        function zoomOut() {
+            currentScale = Math.max(currentScale - 0.2, 0.8);
+            loadPage();
+        }
+
+        async function searchText() {
+            try {
+                const searchQuery = document.getElementById('searchQuery').value.toLowerCase();
+                const bookUrl = document.getElementById('bookSelect').value;
+
+                if (!pdfDoc || pdfDoc.url !== bookUrl) {
+                    pdfDoc = await pdfjsLib.getDocument(bookUrl).promise;
+                    pdfDoc.url = bookUrl;
+                }
+
+                for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+                    const page = await pdfDoc.getPage(pageNum);
+                    const textContent = await page.getTextContent();
+                    const textItems = textContent.items.map(item => item.str.toLowerCase());
+
+                    if (textItems.some(text => text.includes(searchQuery))) {
+                        document.getElementById('pageNumber').value = pageNum;
+                        await loadPage();
+                        alert(`تم العثور على "${searchQuery}" في الصفحة ${pageNum}`);
+                        return;
+                    }
+                }
+                alert("لم يتم العثور على النص المطلوب.");
+            } catch (error) {
+                alert('حدث خطأ في البحث: ' + error.message);
+            }
+        }
+
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                if (event.target.id === 'pageNumber') loadPage();
+                else searchText();
+            }
+        }
+
+        // التحميل الأولي
+        loadPage();
+    </script>
+</body>
+</html>
